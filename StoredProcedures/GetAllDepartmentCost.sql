@@ -27,6 +27,8 @@ BEGIN
         ON MR.MR_Id = MRI.MR_Id
 
     WHERE MR.Project_Id = @Project_Id
+          AND MR.Dept_ID <> 1
+          AND MR_Type = 'A'
 
     GROUP BY MR.Project_Id;
 
