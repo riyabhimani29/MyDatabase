@@ -1,13 +1,10 @@
 USE [db_a8637c_twfgallery]
 GO
-
-/****** Object:  StoredProcedure [dbo].[internalStocktrans_mst_insert]    Script Date: 26-04-2026 18:31:26 ******/
+/****** Object:  StoredProcedure [dbo].[internalStocktrans_mst_insert]    Script Date: 13-05-2026 11:07:36 ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
-
 
 
 ALTER PROCEDURE [dbo].[internalStocktrans_mst_insert]    
@@ -42,7 +39,7 @@ BEGIN
              ProductionDepartment, Remark, MAC_Add, Entry_User, Entry_Date,
              Year_Id, Branch_Id, Is_ProDept, Trans_Type)
         VALUES
-            (@FrGodown_Id, @TransDate, @ToGodown_Id, @IssueBy, @ReceiveBy, @ProjectDocument,
+            (@FrGodown_Id, dbo.Get_SysDate(), @ToGodown_Id, @IssueBy, @ReceiveBy, @ProjectDocument,
              @ProductionDepartment, @Remark, @MAC_Add, @Entry_User, dbo.Get_SysDate(),
              @Year_Id, @Branch_ID, @Is_ProDept, @Trans_Type);
 
@@ -68,6 +65,8 @@ JOIN M_Item MI ON MI.Item_Code = D.Item_Code;
         WHILE @@FETCH_STATUS = 0
         BEGIN
             -- Check for freeze stock
+            IF @Trans_Type = 'T_To_H'
+            BEGIN
             IF EXISTS (SELECT 1 FROM StockView WHERE Id = @_Id AND (Pending_Qty - Freeze_Qty) < @_Qty)
             BEGIN
                 DECLARE @Freeze_Qty NUMERIC(18,3) = (SELECT Freeze_Qty FROM StockView WHERE Id = @_Id);
@@ -82,6 +81,7 @@ JOIN M_Item MI ON MI.Item_Code = D.Item_Code;
 
                 ROLLBACK TRANSACTION;
                 RETURN;
+            END
             END
 
             -- Insert Detail Record
@@ -312,6 +312,3 @@ JOIN M_Item MI ON MI.Item_Code = D.Item_Code;
         SET @RetMsg = 'Error Occurred - ' + ERROR_MESSAGE() + '.';
     END CATCH
 END
-GO
-
-
